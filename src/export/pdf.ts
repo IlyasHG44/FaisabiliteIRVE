@@ -85,8 +85,8 @@ export async function exportPdf(site: Site, criteria: Criterion[]): Promise<void
     { ok: 0, watch: 0, risk: 0, blocker: 0 },
   );
   const toAddress = counts.blocker + counts.risk + counts.watch;
-  const tone = counts.blocker || counts.risk ? '#7a5a10' : counts.watch ? '#3a6a1e' : '#1c5c2e';
-  const toneBg = counts.blocker || counts.risk ? '#fbf2d8' : counts.watch ? '#eef5e6' : '#e6f3e6';
+  const tone = counts.blocker ? '#8a3320' : counts.risk ? '#7a5a10' : counts.watch ? '#3a6a1e' : '#1c5c2e';
+  const toneBg = counts.blocker ? '#f6e1da' : counts.risk ? '#fbf2d8' : counts.watch ? '#eef5e6' : '#e6f3e6';
 
   doc.setFillColor(toneBg);
   doc.roundedRect(MARGIN, y, CONTENT_W, 14, 2, 2, 'F');
@@ -97,10 +97,14 @@ export async function exportPdf(site: Site, criteria: Criterion[]): Promise<void
   doc.text(headline, MARGIN + 5, y + 6.5);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.text(
-    `${counts.risk} à vérifier · ${counts.watch} à prendre en compte · ${counts.ok} conforme(s)`,
-    MARGIN + 5, y + 11,
+  const countParts: string[] = [];
+  if (counts.blocker) countParts.push(`${counts.blocker} alerte(s)`);
+  countParts.push(
+    `${counts.risk} à vérifier`,
+    `${counts.watch} à prendre en compte`,
+    `${counts.ok} conforme(s)`,
   );
+  doc.text(countParts.join(' · '), MARGIN + 5, y + 11);
   y += 20;
 
   // ── Légende des niveaux ────────────────────────────────────────────────
@@ -111,6 +115,7 @@ export async function exportPdf(site: Site, criteria: Criterion[]): Promise<void
     [LEVEL_COLOR.ok, 'conforme'],
     [LEVEL_COLOR.watch, 'à prendre en compte'],
     [LEVEL_COLOR.risk, 'à vérifier'],
+    [LEVEL_COLOR.blocker, 'alerte'],
   ];
   for (const [col, lab] of legend) {
     doc.setFillColor(col);

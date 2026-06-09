@@ -3,7 +3,7 @@ import { geocode, reverseGeocode, parseCoords } from './api/ban';
 import { fetchPostes, isEnedisServed } from './api/enedis';
 import { fetchRisks } from './api/georisques';
 import { fetchUrbanisme, fetchNature, fetchPrescriptions } from './api/apicarto';
-import { raccordementCriterion, reseauxCriterion, riskCriteria, urbanismeCriteria, natureCriterion, prescriptionCriterion } from './diagnostic/rules';
+import { raccordementCriterion, reseauxCriterion, riskCriteria, urbanismeCriteria, natureCriterion, prescriptionCriterion, escalateFeasibility } from './diagnostic/rules';
 import { initAutocomplete } from './ui/autocomplete';
 import { renderMap, renderOverlays } from './ui/map';
 import { renderSynthesis } from './ui/synthesis';
@@ -94,14 +94,15 @@ async function runDiagnostic(site: Site, postes: Poste[], postesOk: boolean) {
     track('reseau', isEnedisServed(site.lat, site.lon, cc), true),
   ]);
 
-  const criteria: Criterion[] = [
+  const built: Criterion[] = [
     raccordementCriterion(postes, postesOk, enedisServed),
     reseauxCriterion(),
   ];
-  if (risks) criteria.push(...riskCriteria(risks));
-  if (urb) criteria.push(...urbanismeCriteria(urb, risks));
-  if (nature) criteria.push(natureCriterion(nature));
-  if (prescriptions) criteria.push(prescriptionCriterion(prescriptions));
+  if (risks) built.push(...riskCriteria(risks));
+  if (urb) built.push(...urbanismeCriteria(urb, risks));
+  if (nature) built.push(natureCriterion(nature));
+  if (prescriptions) built.push(prescriptionCriterion(prescriptions));
+  const criteria = escalateFeasibility(built);
 
   renderDiagnostic(diagEl, criteria, site.label);
   renderOverlays({

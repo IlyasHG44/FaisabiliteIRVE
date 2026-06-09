@@ -8,7 +8,7 @@ const CONSEQUENCE_LABEL: Record<Consequence, string> = {
 
 // Libellés "flag" (et non verdict) — l'outil signale, il ne décide pas.
 const COUNT_LABEL: Record<RiskLevel, (n: number) => string> = {
-  blocker: n => `${n} bloquant${n > 1 ? 's' : ''}`,
+  blocker: n => `${n} alerte${n > 1 ? 's' : ''}`,
   risk: n => `${n} à vérifier`,
   watch: n => `${n} à prendre en compte`,
   ok: n => `${n} conforme${n > 1 ? 's' : ''}`,
@@ -62,7 +62,7 @@ export function renderDiagnostic(el: HTMLElement, criteria: Criterion[], siteLab
   );
 
   const toAddress = counts.blocker + counts.risk + counts.watch;
-  const tone = counts.blocker || counts.risk ? 'reserve' : counts.watch ? 'go' : 'go-franc';
+  const tone = counts.blocker ? 'no-go' : counts.risk ? 'reserve' : counts.watch ? 'go' : 'go-franc';
   const headline = toAddress > 0
     ? `${toAddress} point${toAddress > 1 ? 's' : ''} à intégrer à l'étude`
     : 'Aucun point de vigilance détecté';

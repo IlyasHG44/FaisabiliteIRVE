@@ -10,6 +10,16 @@ const SUP_PPR_NATUREL = 'PM1'; // plans de prévention risques naturels (dont in
 const RACC_OK = 50;
 const RACC_WATCH = 150;
 
+// Tout critère qui MENACE la faisabilité (✗) est remonté en niveau "alerte" (rouge),
+// plus ferme qu'un simple "à vérifier" (orange = surcoût/vigilance).
+export function escalateFeasibility(criteria: Criterion[]): Criterion[] {
+  return criteria.map(c =>
+    c.consequences.includes('feasibility') && c.level !== 'blocker'
+      ? { ...c, level: 'blocker' }
+      : c,
+  );
+}
+
 export function raccordementCriterion(postes: Poste[], postesOk = true, enedisServed = true): Criterion {
   if (!enedisServed) {
     return {
