@@ -41,11 +41,18 @@ function renderCriterion(c: Criterion): string {
 
 function renderGroup(title: string, criteria: Criterion[]): string {
   if (!criteria.length) return '';
+  // Récap : une pastille colorée par critère, dans l'en-tête repliable.
+  const dots = criteria.map(c => `<span class="gdot dot-${c.level}"></span>`).join('');
+  // Ouvert d'office si un point à vérifier (🟠) / bloquant ; replié sinon.
+  const open = criteria.some(c => c.level === 'risk' || c.level === 'blocker') ? ' open' : '';
   return `
-    <section class="diag-group">
-      <h3 class="diag-group-title">${title}</h3>
+    <details class="diag-group"${open}>
+      <summary class="diag-group-head">
+        <span class="diag-group-title">${title}</span>
+        <span class="diag-group-dots">${dots}</span>
+      </summary>
       <div class="crit-grid">${criteria.map(renderCriterion).join('')}</div>
-    </section>`;
+    </details>`;
 }
 
 export function renderDiagnostic(el: HTMLElement, criteria: Criterion[], siteLabel: string): void {

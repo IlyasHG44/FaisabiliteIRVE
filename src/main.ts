@@ -104,7 +104,7 @@ async function runDiagnostic(site: Site, postes: Poste[], postesOk: boolean) {
   if (prescriptions) criteria.push(prescriptionCriterion(prescriptions));
 
   renderDiagnostic(diagEl, criteria, site.label);
-  renderOverlays(site, {
+  renderOverlays({
     er: prescriptions?.erFeatures ?? [],
     zone: urb?.zoneFeature ?? null,
     ppr: urb?.pprFeatures ?? [],

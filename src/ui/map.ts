@@ -31,7 +31,7 @@ export function renderMap(site: Site, postes: Poste[]): void {
   if (!map) map = initMap();
   if (markerLayer) map.removeLayer(markerLayer);
   if (overlayLayer) { map.removeLayer(overlayLayer); overlayLayer = null; }
-  map.setView([site.lat, site.lon], 17);
+  map.setView([site.lat, site.lon], 18); // rapproché : vue sur le magasin/parcelle
   markerLayer = L.layerGroup().addTo(map);
 
   L.circleMarker([site.lat, site.lon], {
@@ -62,7 +62,7 @@ function addGeo(features: GeoJSON.Feature[], style: L.PathOptions, popup: string
 }
 
 // Contraintes superposées sur la carte (par-dessus le satellite).
-export function renderOverlays(site: Site, o: MapOverlays): void {
+export function renderOverlays(o: MapOverlays): void {
   if (!map) return;
   if (overlayLayer) map.removeLayer(overlayLayer);
   overlayLayer = L.layerGroup().addTo(map);
@@ -74,16 +74,8 @@ export function renderOverlays(site: Site, o: MapOverlays): void {
   addGeo(o.er, { color: '#b3402a', weight: 2, fillColor: '#b3402a', fillOpacity: 0.28, dashArray: '5,4' }, 'Emplacement réservé — ne pas y implanter d\'ouvrage pérenne');
 
   renderLegend(o);
-
-  // Cadrer pour inclure les contraintes si présentes
-  const layers = overlayLayer.getLayers();
-  if (layers.length) {
-    try {
-      let b = L.latLngBounds([[site.lat, site.lon]]);
-      overlayLayer.eachLayer(l => { if ('getBounds' in l) b = b.extend((l as L.GeoJSON).getBounds()); });
-      map.fitBounds(b, { padding: [30, 30], maxZoom: 18 });
-    } catch { /* garde la vue courante */ }
-  }
+  // On NE recadre PAS sur les contraintes (la zone PLU peut être immense) :
+  // la vue reste centrée sur le site, au zoom rapproché défini par renderMap.
 }
 
 function renderLegend(o: MapOverlays): void {

@@ -115,14 +115,23 @@ h1 { font-size: 27px; font-weight: 600; letter-spacing: -.02em; margin-top: 6px;
 .count-risk { background: rgba(200,122,42,.22); color: #8a4a14; }
 .count-blocker { background: rgba(179,64,42,.2); color: #8a3320; }
 
-/* Groupes thématiques */
-.diag-group { margin-bottom: 20px; }
-.diag-group-title {
-  font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--accent-dk); font-weight: 600; padding-bottom: 8px; margin-bottom: 12px;
-  border-bottom: 1.5px solid var(--line);
+/* Groupes thématiques — accordéons repliables */
+.diag-group { margin-bottom: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); overflow: hidden; }
+.diag-group-head {
+  display: flex; align-items: center; gap: 12px; padding: 13px 16px; cursor: pointer;
+  list-style: none; user-select: none;
 }
-.crit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.diag-group-head::-webkit-details-marker { display: none; }
+.diag-group-head::marker { content: ''; }
+.diag-group-head:hover { background: #f4f2ea; }
+.diag-group-title { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-dk); font-weight: 600; }
+.diag-group-dots { display: inline-flex; gap: 5px; margin-left: auto; align-items: center; }
+.gdot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 2px rgba(0,0,0,.03); }
+.diag-group-head::after { content: '▸'; color: var(--muted); font-size: 11px; transition: transform .15s; }
+.diag-group[open] .diag-group-head::after { transform: rotate(90deg); }
+.diag-group[open] .diag-group-head { border-bottom: 1px solid var(--line); }
+
+.crit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px 16px; }
 @media (max-width: 720px) { .crit-grid { grid-template-columns: 1fr; } }
 
 .crit { display: flex; gap: 12px; align-items: flex-start; padding: 13px 15px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
