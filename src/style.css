@@ -162,6 +162,35 @@ h1 { font-size: 27px; font-weight: 600; letter-spacing: -.02em; margin-top: 6px;
 .ex { font-family: var(--mono); font-size: 13px; padding: 6px 13px; border: 1px solid var(--line); border-radius: 20px; background: var(--paper); color: var(--accent-dk); cursor: pointer; transition: all .1s; }
 .ex:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
 
+/* ── Légende carte ───────────────────────────────────────────────── */
+.map-legend { background: rgba(251,250,245,.93); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font-family: var(--mono); font-size: 11px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.map-legend span { display: flex; align-items: center; gap: 6px; color: var(--ink); }
+.map-legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
+
+/* ── Scan multi-sources (chargement) ─────────────────────────────── */
+.scan { padding: 22px 24px; background: #f0eee6; border-radius: 14px; }
+.scan-title { font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 14px; }
+.scan-list { list-style: none; display: flex; flex-direction: column; gap: 9px; padding: 0; }
+.scan-row { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); transition: color .2s; }
+.scan-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); position: relative; flex-shrink: 0; }
+.scan-row:not(.scan-ok):not(.scan-fail) .scan-dot { border-color: var(--accent); animation: pulse 1s ease-in-out infinite; }
+.scan-ok { color: var(--ink); font-weight: 500; }
+.scan-ok .scan-dot { background: var(--accent); border-color: var(--accent); }
+.scan-ok .scan-dot::after { content: ''; position: absolute; left: 4px; top: 1px; width: 3px; height: 6px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.scan-fail .scan-dot { background: #b3402a; border-color: #b3402a; }
+@keyframes pulse { 0%,100% { opacity: .35 } 50% { opacity: 1 } }
+
+/* ── Apparition en cascade ───────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+  .hero { animation: fadeUp .4s ease both; }
+  .diag-group { animation: fadeUp .45s ease both; }
+  .diag-group:nth-of-type(1) { animation-delay: .05s }
+  .diag-group:nth-of-type(2) { animation-delay: .12s }
+  .diag-group:nth-of-type(3) { animation-delay: .19s }
+  .diag-group:nth-of-type(4) { animation-delay: .26s }
+}
+
 /* ── Footer ──────────────────────────────────────────────────────── */
 .site-footer { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
 .foot-sources span { color: var(--accent-dk); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin-right: 6px; }

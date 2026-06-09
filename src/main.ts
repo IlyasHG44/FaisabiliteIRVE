@@ -5,9 +5,9 @@ import { fetchRisks } from './api/georisques';
 import { fetchUrbanisme, fetchNature, fetchPrescriptions } from './api/apicarto';
 import { raccordementCriterion, reseauxCriterion, riskCriteria, urbanismeCriteria, natureCriterion, prescriptionCriterion } from './diagnostic/rules';
 import { initAutocomplete } from './ui/autocomplete';
-import { renderMap, renderReservedAreas } from './ui/map';
+import { renderMap, renderOverlays } from './ui/map';
 import { renderSynthesis } from './ui/synthesis';
-import { renderDiagnostic, renderDiagnosticLoading, renderDiagnosticError } from './ui/diagnostic';
+import { renderDiagnostic, renderDiagnosticScan, markScan, renderDiagnosticError } from './ui/diagnostic';
 import { exportPdf } from './export/pdf';
 import type { Criterion, Poste, Site } from './types';
 
@@ -76,16 +76,22 @@ async function run() {
 // pas l'affichage du raccordement déjà rendu.
 async function runDiagnostic(site: Site, postes: Poste[], postesOk: boolean) {
   const diagEl = $('diagnostic');
-  renderDiagnosticLoading(diagEl);
+  renderDiagnosticScan(diagEl);
   if (!site.citycode) { renderDiagnosticError(diagEl, 'code INSEE manquant pour cette adresse'); return; }
 
-  // Chaque source échoue indépendamment : un timeout n'efface pas tout le diagnostic.
+  const cc = site.citycode;
+  // Chaque source échoue indépendamment (un timeout n'efface pas tout) et allume
+  // sa ligne du scan dès qu'elle répond.
+  const track = <T, F>(id: string, p: Promise<T>, fallback: F): Promise<T | F> =>
+    p.then((v): T | F => { markScan(diagEl, id, true); return v; })
+     .catch((): T | F => { markScan(diagEl, id, false); return fallback; });
+
   const [risks, urb, nature, prescriptions, enedisServed] = await Promise.all([
-    fetchRisks(site.lat, site.lon, site.citycode).catch(() => null),
-    fetchUrbanisme(site.lat, site.lon).catch(() => null),
-    fetchNature(site.lat, site.lon).catch(() => null),
-    fetchPrescriptions(site.lat, site.lon).catch(() => null),
-    isEnedisServed(site.lat, site.lon, site.citycode).catch(() => true),
+    track('risques', fetchRisks(site.lat, site.lon, cc), null),
+    track('urbanisme', fetchUrbanisme(site.lat, site.lon), null),
+    track('nature', fetchNature(site.lat, site.lon), null),
+    track('prescriptions', fetchPrescriptions(site.lat, site.lon), null),
+    track('reseau', isEnedisServed(site.lat, site.lon, cc), true),
   ]);
 
   const criteria: Criterion[] = [
@@ -98,7 +104,11 @@ async function runDiagnostic(site: Site, postes: Poste[], postesOk: boolean) {
   if (prescriptions) criteria.push(prescriptionCriterion(prescriptions));
 
   renderDiagnostic(diagEl, criteria, site.label);
-  renderReservedAreas(site, prescriptions?.erFeatures ?? []);
+  renderOverlays(site, {
+    er: prescriptions?.erFeatures ?? [],
+    zone: urb?.zoneFeature ?? null,
+    ppr: urb?.pprFeatures ?? [],
+  });
 
   // Signaler les sources éventuellement indisponibles (honnêteté du diagnostic)
   const failed = [

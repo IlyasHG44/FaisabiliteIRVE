@@ -16,6 +16,8 @@ export interface Urbanisme {
   pluType: string | null; // U / AU / A / N
   reglementFile: string | null; // nom du fichier règlement régissant la zone
   supTypes: string[]; // codes SUP au point (ex. ["AC1"])
+  zoneFeature: GeoJSON.Feature | null; // géométrie de la zone PLU (overlay carte)
+  pprFeatures: GeoJSON.Feature[]; // géométries PPR (PM1) au point (overlay carte)
 }
 
 export interface Prescriptions {
@@ -97,16 +99,23 @@ export async function fetchUrbanisme(lat: number, lon: number): Promise<Urbanism
     getJson(`${BASE}/assiette-sup-s?geom=${geom}`),
   ]);
 
-  const zone = zoneRes.features?.[0]?.properties ?? null;
-  const supTypes: string[] = (supRes.features ?? [])
-    .map((f: any) => (f.properties?.suptype as string)?.toUpperCase())
+  const zoneFeature: GeoJSON.Feature | null = zoneRes.features?.[0] ?? null;
+  const zone = zoneFeature?.properties ?? null;
+  const supFeatures: GeoJSON.Feature[] = supRes.features ?? [];
+  const supTypes: string[] = supFeatures
+    .map((f) => (f.properties?.['suptype'] as string)?.toUpperCase())
     .filter(Boolean);
+  const pprFeatures = supFeatures.filter(
+    (f) => (f.properties?.['suptype'] as string)?.toUpperCase() === 'PM1',
+  );
 
   return {
-    pluZone: zone?.libelle ?? null,
-    pluLabel: zone?.libelong ?? null,
-    pluType: zone?.typezone ?? null,
-    reglementFile: zone?.nomfic ?? null,
+    pluZone: zone?.['libelle'] ?? null,
+    pluLabel: zone?.['libelong'] ?? null,
+    pluType: zone?.['typezone'] ?? null,
+    reglementFile: zone?.['nomfic'] ?? null,
     supTypes: [...new Set(supTypes)],
+    zoneFeature,
+    pprFeatures,
   };
 }

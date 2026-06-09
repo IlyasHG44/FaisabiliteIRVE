@@ -83,14 +83,28 @@ export function renderDiagnostic(el: HTMLElement, criteria: Criterion[], siteLab
     ${groups}`;
 }
 
-export function renderDiagnosticLoading(el: HTMLElement): void {
+const SCAN_SOURCES: [string, string][] = [
+  ['reseau', 'Réseau Enedis'],
+  ['risques', 'Risques naturels & technologiques'],
+  ['urbanisme', 'Urbanisme (PLU, servitudes)'],
+  ['nature', 'Zones naturelles protégées'],
+  ['prescriptions', 'Emplacements réservés'],
+];
+
+export function renderDiagnosticScan(el: HTMLElement): void {
   el.innerHTML = `
-    <div class="hero hero-loading">
-      <div class="hero-main">
-        <div class="hero-decision">Analyse en cours…</div>
-        <div class="hero-rationale">Interrogation des bases publiques (Enedis, Géorisques, urbanisme).</div>
-      </div>
+    <div class="scan">
+      <div class="scan-title">Analyse des bases publiques…</div>
+      <ul class="scan-list">
+        ${SCAN_SOURCES.map(([id, label]) =>
+          `<li class="scan-row" data-scan="${id}"><span class="scan-dot"></span>${label}</li>`,
+        ).join('')}
+      </ul>
     </div>`;
+}
+
+export function markScan(el: HTMLElement, id: string, ok: boolean): void {
+  el.querySelector(`[data-scan="${id}"]`)?.classList.add(ok ? 'scan-ok' : 'scan-fail');
 }
 
 export function renderDiagnosticError(el: HTMLElement, message: string): void {
