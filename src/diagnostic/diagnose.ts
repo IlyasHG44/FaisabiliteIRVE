@@ -1,9 +1,10 @@
 import { fetchPostes, isEnedisServed } from '../api/enedis';
 import { fetchRisks } from '../api/georisques';
 import { fetchUrbanisme, fetchNature, fetchPrescriptions } from '../api/apicarto';
+import { fetchNearbyStations } from '../api/irve';
 import {
   raccordementCriterion, reseauxCriterion, riskCriteria,
-  urbanismeCriteria, natureCriterion, prescriptionCriterion, escalateFeasibility,
+  urbanismeCriteria, natureCriterion, prescriptionCriterion, bornesCriterion, escalateFeasibility,
 } from './rules';
 import type { Criterion, Poste, Site } from '../types';
 
@@ -22,11 +23,12 @@ export async function diagnoseSite(site: Site, radiusM = 2000): Promise<SiteDiag
   try { postes = await fetchPostes(site.lat, site.lon, radiusM); } catch { postesOk = false; }
 
   const safe = <T>(p: Promise<T>): Promise<T | null> => p.catch(() => null);
-  const [risks, urb, nature, prescriptions, enedisServed] = await Promise.all([
+  const [risks, urb, nature, prescriptions, bornes, enedisServed] = await Promise.all([
     safe(fetchRisks(site.lat, site.lon, cc)),
     safe(fetchUrbanisme(site.lat, site.lon)),
     safe(fetchNature(site.lat, site.lon)),
     safe(fetchPrescriptions(site.lat, site.lon)),
+    safe(fetchNearbyStations(site.lat, site.lon)),
     isEnedisServed(site.lat, site.lon, cc).catch(() => true),
   ]);
 
@@ -38,6 +40,7 @@ export async function diagnoseSite(site: Site, radiusM = 2000): Promise<SiteDiag
   if (urb) built.push(...urbanismeCriteria(urb, risks));
   if (nature) built.push(natureCriterion(nature));
   if (prescriptions) built.push(prescriptionCriterion(prescriptions));
+  if (bornes) built.push(bornesCriterion(bornes));
 
   const failed = ([[risks, 'risques'], [urb, 'urbanisme'], [nature, 'nature'], [prescriptions, 'ER']] as [unknown, string][])
     .filter(([v]) => !v)

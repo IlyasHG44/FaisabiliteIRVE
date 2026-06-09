@@ -20,6 +20,7 @@ const GROUPS: { title: string; ids: string[] }[] = [
   { title: 'Risques naturels', ids: ['seisme', 'argiles', 'radon', 'mvt', 'cavites', 'inondation'] },
   { title: 'Risques technologiques', ids: ['pollution', 'icpe'] },
   { title: 'Urbanisme & environnement', ids: ['plu', 'prescriptions', 'monument', 'nature'] },
+  { title: 'Marché / concurrence', ids: ['bornes'] },
 ];
 
 function renderCriterion(c: Criterion): string {
@@ -96,6 +97,7 @@ const SCAN_SOURCES: [string, string][] = [
   ['urbanisme', 'Urbanisme (PLU, servitudes)'],
   ['nature', 'Zones naturelles protégées'],
   ['prescriptions', 'Emplacements réservés'],
+  ['bornes', 'Bornes de recharge (concurrence)'],
 ];
 
 export function renderDiagnosticScan(el: HTMLElement): void {

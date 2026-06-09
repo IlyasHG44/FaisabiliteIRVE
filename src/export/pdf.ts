@@ -28,6 +28,7 @@ const GROUPS: { title: string; ids: string[] }[] = [
   { title: 'Risques naturels', ids: ['seisme', 'argiles', 'radon', 'mvt', 'cavites', 'inondation'] },
   { title: 'Risques technologiques', ids: ['pollution', 'icpe'] },
   { title: 'Urbanisme & environnement', ids: ['plu', 'prescriptions', 'monument', 'nature'] },
+  { title: 'Marché / concurrence', ids: ['bornes'] },
 ];
 
 const W = 210;

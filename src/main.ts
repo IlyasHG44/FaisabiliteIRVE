@@ -3,7 +3,8 @@ import { geocode, reverseGeocode, parseCoords } from './api/ban';
 import { fetchPostes, isEnedisServed } from './api/enedis';
 import { fetchRisks } from './api/georisques';
 import { fetchUrbanisme, fetchNature, fetchPrescriptions } from './api/apicarto';
-import { raccordementCriterion, reseauxCriterion, riskCriteria, urbanismeCriteria, natureCriterion, prescriptionCriterion, escalateFeasibility } from './diagnostic/rules';
+import { fetchNearbyStations } from './api/irve';
+import { raccordementCriterion, reseauxCriterion, riskCriteria, urbanismeCriteria, natureCriterion, prescriptionCriterion, bornesCriterion, escalateFeasibility } from './diagnostic/rules';
 import { initAutocomplete } from './ui/autocomplete';
 import { renderMap, renderOverlays } from './ui/map';
 import { renderSynthesis } from './ui/synthesis';
@@ -88,11 +89,12 @@ async function runDiagnostic(site: Site, postes: Poste[], postesOk: boolean) {
     p.then((v): T | F => { markScan(diagEl, id, true); return v; })
      .catch((): T | F => { markScan(diagEl, id, false); return fallback; });
 
-  const [risks, urb, nature, prescriptions, enedisServed] = await Promise.all([
+  const [risks, urb, nature, prescriptions, bornes, enedisServed] = await Promise.all([
     track('risques', fetchRisks(site.lat, site.lon, cc), null),
     track('urbanisme', fetchUrbanisme(site.lat, site.lon), null),
     track('nature', fetchNature(site.lat, site.lon), null),
     track('prescriptions', fetchPrescriptions(site.lat, site.lon), null),
+    track('bornes', fetchNearbyStations(site.lat, site.lon), null),
     track('reseau', isEnedisServed(site.lat, site.lon, cc), true),
   ]);
 
@@ -104,6 +106,7 @@ async function runDiagnostic(site: Site, postes: Poste[], postesOk: boolean) {
   if (urb) built.push(...urbanismeCriteria(urb, risks));
   if (nature) built.push(natureCriterion(nature));
   if (prescriptions) built.push(prescriptionCriterion(prescriptions));
+  if (bornes) built.push(bornesCriterion(bornes));
   const criteria = escalateFeasibility(built);
 
   renderDiagnostic(diagEl, criteria, site.label);

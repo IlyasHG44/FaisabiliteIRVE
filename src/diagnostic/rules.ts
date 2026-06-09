@@ -1,6 +1,7 @@
 import type { Criterion, Poste } from '../types';
 import type { RisksRaw } from '../api/georisques';
 import type { Nature, Prescriptions, Urbanisme } from '../api/apicarto';
+import type { NearbyStations } from '../api/irve';
 
 // Codes SUP (servitudes d'utilité publique)
 const SUP_MONUMENT = 'AC1'; // protection monuments historiques
@@ -288,6 +289,29 @@ export function prescriptionCriterion(p: Prescriptions): Criterion {
     label: 'Emplacement réservé / recul',
     level: 'watch',
     detail: `Marge de recul${reculVal} le long de la voie — vise les bâtiments ; les IRVE / équipements d'intérêt collectif en sont généralement exemptés (L111-7 CU), a fortiori en zone urbanisée. À confirmer.`,
+    consequences: [],
+  };
+}
+
+// Bornes de recharge publiques à proximité (critère COMMERCIAL, pas un frein) :
+// concurrence/cannibalisation si présentes, opportunité (zone non desservie) si absentes.
+export function bornesCriterion(s: NearbyStations): Criterion {
+  if (s.count === 0) {
+    return {
+      id: 'bornes',
+      label: 'Bornes de recharge à proximité',
+      level: 'ok',
+      detail: 'Aucune station publique dans 500 m — zone non desservie (opportunité).',
+      consequences: [],
+    };
+  }
+  const op = s.sampleOperator ? ` (ex. ${s.sampleOperator})` : '';
+  const pw = s.maxPowerKW ? `, jusqu'à ${Math.round(s.maxPowerKW)} kW` : '';
+  return {
+    id: 'bornes',
+    label: 'Bornes de recharge à proximité',
+    level: 'watch',
+    detail: `${s.count} station(s) publique(s) dans 500 m${op}${pw}, la plus proche à ${s.nearestM} m — concurrence / cannibalisation à évaluer.`,
     consequences: [],
   };
 }
