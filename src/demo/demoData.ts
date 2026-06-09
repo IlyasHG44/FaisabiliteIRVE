@@ -1,4 +1,5 @@
 import type { Criterion, Poste, Site } from '../types';
+import { FEATURES } from '../config';
 
 // Diagnostics pré-calculés (cache) pour le Mode Démo : rendu instantané, sans appel
 // API (sauf tuiles satellite + overlays best-effort). Garantit une démo sans plantage.
@@ -14,18 +15,20 @@ const ECHIROLLES = `{"site":{"label":"45.15106, 5.69454 · Échirolles","lat":45
 const TOULOUSE = `{"site":{"label":"Place du Capitole 31000 Toulouse","lat":43.604354,"lon":1.443054,"citycode":"31555"},"postesTotal":100,"postes":[{"lat":43.604031,"lon":1.44378,"dist":69,"commune":"Toulouse"},{"lat":43.60472,"lon":1.442325,"dist":71,"commune":"Toulouse"},{"lat":43.603653,"lon":1.442547,"dist":88,"commune":"Toulouse"},{"lat":43.603483,"lon":1.443253,"dist":98,"commune":"Toulouse"},{"lat":43.605293,"lon":1.443171,"dist":105,"commune":"Toulouse"},{"lat":43.603609,"lon":1.444025,"dist":114,"commune":"Toulouse"},{"lat":43.60388,"lon":1.44175,"dist":117,"commune":"Toulouse"},{"lat":43.604527,"lon":1.44153,"dist":124,"commune":"Toulouse"},{"lat":43.603475,"lon":1.444048,"dist":126,"commune":"Toulouse"},{"lat":43.603431,"lon":1.441807,"dist":144,"commune":"Toulouse"},{"lat":43.603158,"lon":1.443768,"dist":145,"commune":"Toulouse"},{"lat":43.604301,"lon":1.444866,"dist":146,"commune":"Toulouse"}],"criteria":[{"id":"raccordement","label":"Raccordement réseau","level":"watch","detail":"Poste le plus proche à 69 m — linéaire modéré.","consequences":["financial"]},{"id":"reseaux","label":"Réseaux enterrés","level":"watch","detail":"Géodétection à prévoir avant travaux — open data et retours DT/DICT indicatifs seulement.","consequences":["financial"]},{"id":"seisme","label":"Séisme","level":"ok","detail":"Zone de sismicité 1/5.","consequences":[]},{"id":"argiles","label":"Retrait-gonflement argiles","level":"watch","detail":"Exposition 2/3 (moyenne) — dalles poste/BESS : fondations à adapter, étude de sol recommandée.","consequences":["financial"]},{"id":"radon","label":"Radon","level":"ok","detail":"Potentiel 1/3 — sans objet (pas de local occupé).","consequences":[]},{"id":"mvt","label":"Mouvement de terrain","level":"ok","detail":"Aucun mouvement recensé dans 500 m.","consequences":[]},{"id":"cavites","label":"Cavités souterraines","level":"watch","detail":"1 cavité(s) recensée(s) dans 500 m.","consequences":["financial"]},{"id":"pollution","label":"Pollution des sols","level":"watch","detail":"1 ancien(s) site(s) industriel(s) dans 500 m (ex. MANUFACTURE TOULOUSAINE DE PRODUITS D'ENTRETIEN,SORECO).","consequences":["financial"]},{"id":"icpe","label":"Installations classées (ICPE)","level":"watch","detail":"2 ICPE dans 500 m (ex. SARL SONEDI) — voisinage industriel à prendre en compte.","consequences":[]},{"id":"plu","label":"Zonage PLU","level":"ok","detail":"Zone PSMV — Emprise du Plan de Sauvegarde et de Mise en Valeur.","consequences":[]},{"id":"monument","label":"Monument historique","level":"watch","detail":"Site dans un périmètre de protection ABF — avis requis.","consequences":["delay"]},{"id":"inondation","label":"Inondation","level":"blocker","detail":"Site dans un PPR naturel — nature et zonage à confirmer. Contexte : zone inondable à proximité (atlas), 19 arrêté(s) CATNAT inondation sur la commune.","consequences":["feasibility"]},{"id":"nature","label":"Zones naturelles protégées","level":"ok","detail":"Hors Natura 2000 et ZNIEFF.","consequences":[]},{"id":"prescriptions","label":"Emplacement réservé / recul","level":"ok","detail":"Aucun emplacement réservé ni marge de recul à proximité.","consequences":[]}]}`;
 
 const echirolles = JSON.parse(ECHIROLLES) as DemoSiteCache;
-echirolles.criteria.push({
-  id: 'bornes', label: 'Bornes de recharge à proximité', level: 'watch',
-  detail: '11 station(s) publique(s) dans 500 m (ex. Power Dot France), jusqu\'à 300 kW, la plus proche à 81 m — concurrence / cannibalisation à évaluer.',
-  consequences: [],
-});
-
 const toulouse = JSON.parse(TOULOUSE) as DemoSiteCache;
-toulouse.criteria.push({
-  id: 'bornes', label: 'Bornes de recharge à proximité', level: 'watch',
-  detail: '4 station(s) publique(s) dans 500 m (ex. GROUPE INDIGO), jusqu\'à 24 kW, la plus proche à 28 m — concurrence / cannibalisation à évaluer.',
-  consequences: [],
-});
+
+if (FEATURES.bornes) {
+  echirolles.criteria.push({
+    id: 'bornes', label: 'Bornes de recharge à proximité', level: 'watch',
+    detail: '11 station(s) publique(s) dans 500 m (ex. Power Dot France), jusqu\'à 300 kW, la plus proche à 81 m — concurrence / cannibalisation à évaluer.',
+    consequences: [],
+  });
+  toulouse.criteria.push({
+    id: 'bornes', label: 'Bornes de recharge à proximité', level: 'watch',
+    detail: '4 station(s) publique(s) dans 500 m (ex. GROUPE INDIGO), jusqu\'à 24 kW, la plus proche à 28 m — concurrence / cannibalisation à évaluer.',
+    consequences: [],
+  });
+}
 
 export const DEMO_SITES: { name: string; data: DemoSiteCache }[] = [
   { name: 'Échirolles (38) — alerte inondation', data: echirolles },

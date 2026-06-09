@@ -1,4 +1,5 @@
 import type { Consequence, Criterion, RiskLevel } from '../types';
+import { FEATURES } from '../config';
 
 const CONSEQUENCE_LABEL: Record<Consequence, string> = {
   financial: '€ impact financier',
@@ -97,7 +98,7 @@ const SCAN_SOURCES: [string, string][] = [
   ['urbanisme', 'Urbanisme (PLU, servitudes)'],
   ['nature', 'Zones naturelles protégées'],
   ['prescriptions', 'Emplacements réservés'],
-  ['bornes', 'Bornes de recharge (concurrence)'],
+  ...(FEATURES.bornes ? [['bornes', 'Bornes de recharge (concurrence)'] as [string, string]] : []),
 ];
 
 export function renderDiagnosticScan(el: HTMLElement): void {

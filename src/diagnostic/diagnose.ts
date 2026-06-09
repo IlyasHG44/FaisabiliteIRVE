@@ -2,6 +2,7 @@ import { fetchPostes, isEnedisServed } from '../api/enedis';
 import { fetchRisks } from '../api/georisques';
 import { fetchUrbanisme, fetchNature, fetchPrescriptions } from '../api/apicarto';
 import { fetchNearbyStations } from '../api/irve';
+import { FEATURES } from '../config';
 import {
   raccordementCriterion, reseauxCriterion, riskCriteria,
   urbanismeCriteria, natureCriterion, prescriptionCriterion, bornesCriterion, escalateFeasibility,
@@ -28,7 +29,7 @@ export async function diagnoseSite(site: Site, radiusM = 2000): Promise<SiteDiag
     safe(fetchUrbanisme(site.lat, site.lon)),
     safe(fetchNature(site.lat, site.lon)),
     safe(fetchPrescriptions(site.lat, site.lon)),
-    safe(fetchNearbyStations(site.lat, site.lon)),
+    FEATURES.bornes ? safe(fetchNearbyStations(site.lat, site.lon)) : Promise.resolve(null),
     isEnedisServed(site.lat, site.lon, cc).catch(() => true),
   ]);
 

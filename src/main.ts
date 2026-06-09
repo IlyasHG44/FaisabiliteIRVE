@@ -12,6 +12,7 @@ import { renderDiagnostic, renderDiagnosticScan, markScan, renderDiagnosticError
 import { exportPdf } from './export/pdf';
 import { initPortfolio } from './ui/portfolio';
 import { DEMO_SITES, type DemoSiteCache } from './demo/demoData';
+import { FEATURES } from './config';
 import type { Criterion, Poste, Site } from './types';
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -94,7 +95,7 @@ async function runDiagnostic(site: Site, postes: Poste[], postesOk: boolean) {
     track('urbanisme', fetchUrbanisme(site.lat, site.lon), null),
     track('nature', fetchNature(site.lat, site.lon), null),
     track('prescriptions', fetchPrescriptions(site.lat, site.lon), null),
-    track('bornes', fetchNearbyStations(site.lat, site.lon), null),
+    FEATURES.bornes ? track('bornes', fetchNearbyStations(site.lat, site.lon), null) : Promise.resolve(null),
     track('reseau', isEnedisServed(site.lat, site.lon, cc), true),
   ]);
 
