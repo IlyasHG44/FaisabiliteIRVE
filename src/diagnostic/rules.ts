@@ -253,7 +253,8 @@ export function prescriptionCriterion(p: Prescriptions): Criterion {
     };
   }
 
-  const reculVal = p.reculText ? ` de ${p.reculText}` : '';
+  // n'affiche la valeur que si c'est une vraie distance (contient un chiffre)
+  const reculVal = p.reculText && /\d/.test(p.reculText) ? ` de ${p.reculText}` : '';
 
   // Emplacement réservé : seul vrai frein IRVE — uniquement si l'implantation empiète
   // sur l'emprise réservée (projet public, ex. élargissement voirie).

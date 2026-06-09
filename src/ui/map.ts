@@ -31,7 +31,6 @@ export function renderMap(site: Site, postes: Poste[]): void {
   if (!map) map = initMap();
   if (markerLayer) map.removeLayer(markerLayer);
   if (overlayLayer) { map.removeLayer(overlayLayer); overlayLayer = null; }
-  map.setView([site.lat, site.lon], 18); // rapproché : vue sur le magasin/parcelle
   markerLayer = L.layerGroup().addTo(map);
 
   L.circleMarker([site.lat, site.lon], {
@@ -44,7 +43,15 @@ export function renderMap(site: Site, postes: Poste[]): void {
     }).bindPopup(`Poste HTA/BT<br>${Math.round(p.dist)} m`).addTo(markerLayer!);
   });
 
-  setTimeout(() => map!.invalidateSize(), 120);
+  // Vue déterministe : on recalcule la taille du conteneur AVANT de fixer la vue,
+  // puis on la ré-assert après stabilisation du layout. Sans ça, une course entre
+  // setView et le redimensionnement du conteneur provoquait un dézoom intermittent.
+  const applyView = () => {
+    map!.invalidateSize();
+    map!.setView([site.lat, site.lon], 18, { animate: false });
+  };
+  applyView();
+  setTimeout(applyView, 200);
 }
 
 export interface MapOverlays {

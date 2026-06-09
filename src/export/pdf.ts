@@ -63,16 +63,22 @@ export async function exportPdf(site: Site, criteria: Criterion[]): Promise<void
   y = 36;
 
   // ── Site + synthèse ────────────────────────────────────────────────────
+  const coordStr = `${site.lat.toFixed(5)}, ${site.lon.toFixed(5)}`;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
+  doc.setFontSize(14);
   doc.setTextColor(INK);
-  doc.text(doc.splitTextToSize(site.label, CONTENT_W), MARGIN, y);
-  y += 6;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(MUTED);
-  doc.text(`${site.lat.toFixed(5)}, ${site.lon.toFixed(5)}`, MARGIN, y);
-  y += 9;
+  const titleLines: string[] = doc.splitTextToSize(site.label, CONTENT_W);
+  doc.text(titleLines, MARGIN, y);
+  y += titleLines.length * 6;
+  // Coordonnées en sous-titre seulement si le titre ne les contient pas déjà
+  if (!site.label.includes(site.lat.toFixed(5))) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(MUTED);
+    doc.text(coordStr, MARGIN, y);
+    y += 4;
+  }
+  y += 5;
 
   const counts = criteria.reduce<Record<RiskLevel, number>>(
     (a, c) => ({ ...a, [c.level]: a[c.level] + 1 }),
@@ -97,11 +103,31 @@ export async function exportPdf(site: Site, criteria: Criterion[]): Promise<void
   );
   y += 20;
 
+  // ── Légende des niveaux ────────────────────────────────────────────────
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  let lx = MARGIN;
+  const legend: [string, string][] = [
+    [LEVEL_COLOR.ok, 'conforme'],
+    [LEVEL_COLOR.watch, 'à prendre en compte'],
+    [LEVEL_COLOR.risk, 'à vérifier'],
+  ];
+  for (const [col, lab] of legend) {
+    doc.setFillColor(col);
+    doc.circle(lx + 1, y - 1, 1.1, 'F');
+    doc.setTextColor(MUTED);
+    doc.text(lab, lx + 3.5, y);
+    lx += 3.5 + doc.getTextWidth(lab) + 8;
+  }
+  y += 8;
+
   // ── Carte ──────────────────────────────────────────────────────────────
   const mapEl = document.getElementById('map');
   if (mapEl) {
     try {
-      const canvas = await html2canvas(mapEl, { useCORS: true, scale: 1.5, logging: false });
+      // Laisse les tuiles satellite finir de charger avant la capture (sinon rendu pâle)
+      await new Promise(r => setTimeout(r, 450));
+      const canvas = await html2canvas(mapEl, { useCORS: true, scale: 2, logging: false });
       const mapH = 58;
       doc.setDrawColor(LINE);
       doc.setLineWidth(0.3);
@@ -139,17 +165,18 @@ export async function exportPdf(site: Site, criteria: Criterion[]): Promise<void
       doc.setFillColor(LEVEL_COLOR[c.level]);
       doc.circle(MARGIN + 1.5, y - 1.4, 1.3, 'F');
 
-      // libellé + conséquences
+      // libellé + conséquences (collées juste après le libellé)
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
       doc.setTextColor(INK);
       doc.text(c.label, MARGIN + 6, y);
       if (c.consequences.length) {
+        const labelW = doc.getTextWidth(c.label);
         const tag = c.consequences.map(k => CONSEQUENCE_LABEL[k]).join(' · ');
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(7.5);
         doc.setTextColor(WARN);
-        doc.text(tag, W - MARGIN, y, { align: 'right' });
+        doc.text(`·  ${tag}`, MARGIN + 6 + labelW + 2, y);
       }
       y += 4.5;
 
