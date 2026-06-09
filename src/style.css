@@ -23,6 +23,11 @@ header { border-bottom: 2px solid var(--ink); padding-bottom: 16px; margin-botto
 .brand-mark { display: inline-grid; place-items: center; width: 26px; height: 26px; background: var(--accent-dk); color: #e7b53c; border-radius: 7px; }
 .brand-name { font-family: var(--mono); font-weight: 600; font-size: 16px; letter-spacing: -.01em; color: var(--ink); }
 .brand-tag { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding-left: 8px; border-left: 1px solid var(--line); }
+.demo-btn { margin-left: auto; font-family: var(--mono); font-size: 12px; font-weight: 600; padding: 7px 13px; border: 1.5px solid var(--accent); border-radius: 8px; background: var(--card); color: var(--accent); cursor: pointer; }
+.demo-btn:hover { background: var(--accent); color: #fff; }
+.demo-picker { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; margin-top: 8px; }
+.demo-item { font-family: var(--mono); font-size: 13px; padding: 9px 14px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--card); color: var(--accent-dk); cursor: pointer; }
+.demo-item:hover { border-color: var(--accent); color: var(--accent); }
 .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
 h1 { font-size: 27px; font-weight: 600; letter-spacing: -.02em; margin-top: 6px; line-height: 1.1; }
 .sub { color: var(--muted); font-size: 14px; margin-top: 8px; max-width: 640px; }

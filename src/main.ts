@@ -10,6 +10,7 @@ import { renderSynthesis } from './ui/synthesis';
 import { renderDiagnostic, renderDiagnosticScan, markScan, renderDiagnosticError } from './ui/diagnostic';
 import { exportPdf } from './export/pdf';
 import { initPortfolio } from './ui/portfolio';
+import { DEMO_SITES, type DemoSiteCache } from './demo/demoData';
 import type { Criterion, Poste, Site } from './types';
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -147,3 +148,45 @@ initPortfolio((adresse: string) => {
   run();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
+
+// ── Mode Démo : rendu instantané depuis le cache (zéro appel API bloquant) ──
+function loadDemo(d: DemoSiteCache): void {
+  picked = null;
+  ($('addr') as HTMLInputElement).value = d.site.label;
+  $('status').className = 'status';
+  $('status').textContent = `Mode démo — ${d.site.label} (résultat en cache)`;
+  $('empty').classList.add('hidden');
+  $('results').classList.remove('hidden');
+
+  renderMap(d.site, d.postes);
+  renderSynthesis($('syn'), $('plist'), d.site, d.postes, 2);
+  renderDiagnostic($('diagnostic'), d.criteria, d.site.label);
+
+  const pdfBtn = $('pdf-btn') as HTMLButtonElement;
+  pdfBtn.onclick = () => { void exportPdf(d.site, d.criteria); };
+  pdfBtn.classList.remove('hidden');
+
+  // Overlays carte en best-effort (non bloquant : si l'API tombe, la carte reste propre)
+  void (async () => {
+    try {
+      const [urb, presc] = await Promise.all([
+        fetchUrbanisme(d.site.lat, d.site.lon).catch(() => null),
+        fetchPrescriptions(d.site.lat, d.site.lon).catch(() => null),
+      ]);
+      renderOverlays({ er: presc?.erFeatures ?? [], zone: urb?.zoneFeature ?? null, ppr: urb?.pprFeatures ?? [] });
+    } catch { /* carte sans overlays — sans gravité */ }
+  })();
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Bouton "Mode démo" : ouvre un petit sélecteur des sites en cache
+const demoPicker = $('demo-picker');
+demoPicker.innerHTML = DEMO_SITES.map((s, i) => `<button class="demo-item" data-i="${i}">${s.name}</button>`).join('');
+demoPicker.querySelectorAll<HTMLButtonElement>('.demo-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    demoPicker.classList.add('hidden');
+    loadDemo(DEMO_SITES[parseInt(btn.dataset['i']!, 10)].data);
+  });
+});
+$('demo-btn').addEventListener('click', () => demoPicker.classList.toggle('hidden'));
