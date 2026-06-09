@@ -9,6 +9,7 @@ import { renderMap, renderOverlays } from './ui/map';
 import { renderSynthesis } from './ui/synthesis';
 import { renderDiagnostic, renderDiagnosticScan, markScan, renderDiagnosticError } from './ui/diagnostic';
 import { exportPdf } from './export/pdf';
+import { initPortfolio } from './ui/portfolio';
 import type { Criterion, Poste, Site } from './types';
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -137,4 +138,12 @@ document.querySelectorAll<HTMLButtonElement>('.ex').forEach(btn => {
     ($('addr') as HTMLInputElement).value = btn.dataset['q'] ?? '';
     run();
   });
+});
+
+// Mode portefeuille : clic sur une ligne → ouvre le diagnostic détaillé du site
+initPortfolio((adresse: string) => {
+  picked = null;
+  ($('addr') as HTMLInputElement).value = adresse;
+  run();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 });

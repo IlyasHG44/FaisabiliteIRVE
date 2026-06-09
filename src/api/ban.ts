@@ -56,6 +56,13 @@ export async function reverseGeocode(lat: number, lon: number): Promise<Site> {
   };
 }
 
+// Résout une saisie libre (adresse OU coordonnées) en Site géolocalisé.
+export async function resolveSite(input: string): Promise<Site> {
+  const coords = parseCoords(input);
+  if (coords) return reverseGeocode(coords.lat, coords.lon);
+  return geocode(input);
+}
+
 export async function geocode(q: string): Promise<Site> {
   const url = `${BASE}?limit=1&q=${encodeURIComponent(q)}`;
   const res = await fetch(url);

@@ -82,6 +82,23 @@
       </details>
     </div>
 
+    <details class="card pf-card">
+      <summary>📊 Mode portefeuille — analyser plusieurs sites</summary>
+      <div class="pf-body">
+        <p class="pf-help">Un site par ligne, au format <code>référence;adresse</code> (la référence est optionnelle). L'adresse accepte aussi des coordonnées GPS.</p>
+        <textarea id="pf-input" class="pf-input" rows="6" placeholder="Site A;12 rue de la Paix 75002 Paris&#10;Site B;45.6797, -0.3016&#10;3 rue des fleurs 69001 Lyon"></textarea>
+        <input type="file" id="pf-file" accept=".csv,text/csv" hidden />
+        <div class="pf-actions">
+          <button id="pf-run">Analyser le portefeuille</button>
+          <button id="pf-import" class="pf-sec">Importer un CSV</button>
+          <button id="pf-template" class="pf-sec">↓ Modèle CSV</button>
+          <button id="pf-export" class="pf-sec hidden">💾 Exporter les résultats</button>
+        </div>
+        <div class="pf-progress" id="pf-progress"></div>
+        <div id="pf-results"></div>
+      </div>
+    </details>
+
     <div class="disclaimer">
       <b>Avertissement.</b> Les données proviennent d'open data publics (Enedis, Géorisques, IGN/Géoportail de l'Urbanisme, BAN), fournis à titre indicatif sans garantie de fiabilité ni d'exhaustivité. Ce pré-diagnostic <b>ne remplace pas</b> une étude de faisabilité, une étude de raccordement Enedis ni une visite de site. Il sert à dégrossir et à prioriser, pas à décider.
     </div>
