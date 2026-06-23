@@ -323,3 +323,6 @@ h1 { font-size: 34px; font-weight: 700; letter-spacing: -.025em; line-height: 1.
 
 /* Contenu surélévation (dans l'accordéon) */
 .sur-inner { padding: 14px 16px; }
+
+/* Crédit éditeur — bas de page résultat (discret) */
+.result-foot { margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--line); text-align: center; font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; color: var(--muted); }
