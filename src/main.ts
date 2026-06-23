@@ -7,9 +7,8 @@ import { fetchNearbyStations } from './api/irve';
 import { raccordementCriterion, reseauxCriterion, riskCriteria, urbanismeCriteria, natureCriterion, prescriptionCriterion, bornesCriterion, escalateFeasibility } from './diagnostic/rules';
 import { initAutocomplete } from './ui/autocomplete';
 import { renderMap, renderOverlays } from './ui/map';
-import { renderSynthesis } from './ui/synthesis';
 import { renderDiagnostic, renderDiagnosticScan, markScan, renderDiagnosticError } from './ui/diagnostic';
-import { exportPdf } from './export/pdf';
+import { renderSurelevation, renderSiteAltitude } from './ui/surelevation';
 import { initPortfolio } from './ui/portfolio';
 import { DEMO_SITES, type DemoSiteCache } from './demo/demoData';
 import { FEATURES } from './config';
@@ -25,6 +24,33 @@ initAutocomplete(
   site => { picked = site.lat !== 0 ? site : null; },
 );
 
+function showResults(): void {
+  $('home').classList.add('hidden');
+  $('results').classList.remove('hidden');
+  window.scrollTo({ top: 0 });
+}
+
+function showHome(): void {
+  $('results').classList.add('hidden');
+  $('home').classList.remove('hidden');
+  window.scrollTo({ top: 0 });
+}
+
+// Export PDF = impression navigateur (le PDF reprend exactement la page, via le CSS print).
+function exportPdf(): void { window.print(); }
+
+// Bloc latéral : postes électriques à proximité, numérotés comme sur la carte.
+function renderPostes(el: HTMLElement, postes: Poste[]): void {
+  if (!postes.length) {
+    el.innerHTML = '<div class="postes-head">Postes électriques à proximité</div><div class="postes-empty">Aucun poste répertorié dans le rayon.</div>';
+    return;
+  }
+  const rows = postes.slice(0, 8)
+    .map((p, i) => `<li><span class="poste-id">P${i + 1}</span><span class="poste-dist">${Math.round(p.dist)} m</span></li>`)
+    .join('');
+  el.innerHTML = `<div class="postes-head">Postes électriques à proximité</div><ul class="postes-list">${rows}</ul>`;
+}
+
 async function run() {
   const radiusM = parseInt(($('radius') as HTMLSelectElement).value, 10);
   const goBtn = $('go') as HTMLButtonElement;
@@ -32,7 +58,6 @@ async function run() {
 
   goBtn.disabled = true;
   statusEl.className = 'status';
-  ($('pdf-btn') as HTMLButtonElement).classList.add('hidden'); // réaffiché quand le diagnostic est prêt
 
   try {
     let site = picked;
@@ -48,8 +73,9 @@ async function run() {
         site = await geocode(q);
       }
     }
-    statusEl.textContent = 'Interrogation de l\'open data Enedis…';
-    // Enedis non bloquant : s'il est lent/down, le reste du diagnostic tourne quand même.
+    statusEl.textContent = '';
+    showResults();
+    // Réseau non bloquant : s'il est lent/down, le reste du diagnostic tourne quand même.
     let postes: Poste[] = [];
     let postesOk = true;
     try {
@@ -57,16 +83,9 @@ async function run() {
     } catch {
       postesOk = false;
     }
-    statusEl.textContent = postesOk
-      ? `Analyse terminée — ${postes.length} poste(s) dans le rayon.`
-      : 'Réseau Enedis indisponible — diagnostic poursuivi sans le raccordement.';
 
-    const radiusKm = radiusM / 1000;
-    $('empty').classList.add('hidden');
-    $('results').classList.remove('hidden');
     renderMap(site, postes);
-    renderSynthesis($('syn'), $('plist'), site, postes, radiusKm);
-
+    renderPostes($('postes-block'), postes);
     void runDiagnostic(site, postes, postesOk);
   } catch (e: unknown) {
     statusEl.className = 'status err';
@@ -76,19 +95,31 @@ async function run() {
   }
 }
 
+// Module surélévation : affiché uniquement si le site est en PPR inondation
+// (critère 'inondation' non conforme). Caché sinon.
+function mountSurelevation(site: Site, criteria: Criterion[]): void {
+  const el = $('surelevation');
+  const inPpri = criteria.some(c => c.id === 'inondation' && c.level !== 'ok');
+  if (!inPpri) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+  el.classList.remove('hidden');
+  renderSurelevation(el, site);
+}
+
 // Diagnostic faisabilité — isolé du flux principal : un échec (CORS, API) n'affecte
-// pas l'affichage du raccordement déjà rendu.
+// pas l'affichage de la carte déjà rendue.
 async function runDiagnostic(site: Site, postes: Poste[], postesOk: boolean) {
-  const diagEl = $('diagnostic');
-  renderDiagnosticScan(diagEl);
-  if (!site.citycode) { renderDiagnosticError(diagEl, 'code INSEE manquant pour cette adresse'); return; }
+  const synthEl = $('synth');
+  const themesEl = $('diagnostic');
+  renderDiagnosticScan(synthEl, site.label);
+  themesEl.innerHTML = '';
+  if (!site.citycode) { renderDiagnosticError(themesEl, 'code INSEE manquant pour cette adresse'); return; }
 
   const cc = site.citycode;
   // Chaque source échoue indépendamment (un timeout n'efface pas tout) et allume
   // sa ligne du scan dès qu'elle répond.
   const track = <T, F>(id: string, p: Promise<T>, fallback: F): Promise<T | F> =>
-    p.then((v): T | F => { markScan(diagEl, id, true); return v; })
-     .catch((): T | F => { markScan(diagEl, id, false); return fallback; });
+    p.then((v): T | F => { markScan(synthEl, id, true); return v; })
+     .catch((): T | F => { markScan(synthEl, id, false); return fallback; });
 
   const [risks, urb, nature, prescriptions, bornes, enedisServed] = await Promise.all([
     track('risques', fetchRisks(site.lat, site.lon, cc), null),
@@ -110,28 +141,29 @@ async function runDiagnostic(site: Site, postes: Poste[], postesOk: boolean) {
   if (bornes) built.push(bornesCriterion(bornes));
   const criteria = escalateFeasibility(built);
 
-  renderDiagnostic(diagEl, criteria, site.label);
+  renderDiagnostic(synthEl, themesEl, criteria, site.label);
+  renderSiteAltitude($('map-meta'), site);
+  mountSurelevation(site, criteria);
   renderOverlays({
     er: prescriptions?.erFeatures ?? [],
     zone: urb?.zoneFeature ?? null,
     ppr: urb?.pprFeatures ?? [],
   });
-
-  // Signaler les sources éventuellement indisponibles (honnêteté du diagnostic)
-  const failed = [
-    [risks, 'risques'], [urb, 'urbanisme'], [nature, 'zones naturelles'], [prescriptions, 'emplacements réservés'],
-  ].filter(([v]) => !v).map(([, n]) => n as string);
-  if (failed.length) {
-    $('status').textContent += ` · sources indisponibles : ${failed.join(', ')} (relancer)`;
-  }
-
-  // Le PDF reprend le diagnostic → disponible une fois les critères calculés
-  const pdfBtn = $('pdf-btn') as HTMLButtonElement;
-  pdfBtn.onclick = () => { void exportPdf(site, criteria); };
-  pdfBtn.classList.remove('hidden');
 }
 
 $('go').addEventListener('click', run);
+$('brand-home').addEventListener('click', showHome);
+document.getElementById('pdf-btn-top')?.addEventListener('click', exportPdf);
+
+// Recherche depuis la barre supérieure (résultat) → relance un diagnostic
+$('top-search').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = ($('addr-top') as HTMLInputElement).value.trim();
+  if (!v) return;
+  picked = null;
+  ($('addr') as HTMLInputElement).value = v;
+  run();
+});
 ($('addr') as HTMLInputElement).addEventListener('keydown', e => {
   if (e.key === 'Enter') run();
 });
@@ -150,25 +182,19 @@ initPortfolio((adresse: string) => {
   picked = null;
   ($('addr') as HTMLInputElement).value = adresse;
   run();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 // ── Mode Démo : rendu instantané depuis le cache (zéro appel API bloquant) ──
 function loadDemo(d: DemoSiteCache): void {
   picked = null;
   ($('addr') as HTMLInputElement).value = d.site.label;
-  $('status').className = 'status';
-  $('status').textContent = `Mode démo — ${d.site.label} (résultat en cache)`;
-  $('empty').classList.add('hidden');
-  $('results').classList.remove('hidden');
+  showResults();
 
   renderMap(d.site, d.postes);
-  renderSynthesis($('syn'), $('plist'), d.site, d.postes, 2);
-  renderDiagnostic($('diagnostic'), d.criteria, d.site.label);
-
-  const pdfBtn = $('pdf-btn') as HTMLButtonElement;
-  pdfBtn.onclick = () => { void exportPdf(d.site, d.criteria); };
-  pdfBtn.classList.remove('hidden');
+  renderPostes($('postes-block'), d.postes);
+  renderDiagnostic($('synth'), $('diagnostic'), d.criteria, d.site.label);
+  renderSiteAltitude($('map-meta'), d.site);
+  mountSurelevation(d.site, d.criteria);
 
   // Overlays carte en best-effort (non bloquant : si l'API tombe, la carte reste propre)
   void (async () => {
@@ -180,8 +206,6 @@ function loadDemo(d: DemoSiteCache): void {
       renderOverlays({ er: presc?.erFeatures ?? [], zone: urb?.zoneFeature ?? null, ppr: urb?.pprFeatures ?? [] });
     } catch { /* carte sans overlays — sans gravité */ }
   })();
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Bouton "Mode démo" : ouvre un petit sélecteur des sites en cache
