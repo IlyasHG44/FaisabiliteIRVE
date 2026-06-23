@@ -6,11 +6,18 @@ import type { Site } from '../types';
 // L'altitude est récupérée automatiquement ; la cote de référence reste une saisie
 // manuelle (elle est gravée dans la carte réglementaire, non extractible de façon fiable).
 
-function georisquesLink(citycode: string | undefined): string {
-  // Rapport risques de la commune (dont PPRi) sur Géorisques.
-  return citycode
-    ? `https://www.georisques.gouv.fr/mes-risques/connaitre-les-risques-pres-de-chez-moi/rapport?codeInsee=${citycode}`
-    : 'https://www.georisques.gouv.fr/risques/inondations';
+// Lien profond vers le rapport Géorisques du point exact (PPRi, zonage, documents).
+function georisquesLink(site: Site): string {
+  const base = 'https://www.georisques.gouv.fr/mes-risques/connaitre-les-risques-pres-de-chez-moi/rapport2';
+  if (!site.citycode) return 'https://www.georisques.gouv.fr/risques/inondations';
+  const p = new URLSearchParams({
+    typeForm: 'adresse',
+    codeInsee: site.citycode,
+    lon: String(site.lon),
+    lat: String(site.lat),
+    adresse: site.label,
+  });
+  return `${base}?${p.toString()}`;
 }
 
 function renderResult(el: HTMLElement, alt: number | null, cote: number | null): void {
@@ -40,7 +47,7 @@ export function renderSiteAltitude(el: HTMLElement, site: Site): void {
 }
 
 export function renderSurelevation(el: HTMLElement, site: Site): void {
-  const link = georisquesLink(site.citycode);
+  const link = georisquesLink(site);
   el.innerHTML = `
     <details class="theme" open>
       <summary class="theme-head">
@@ -50,7 +57,7 @@ export function renderSurelevation(el: HTMLElement, site: Site): void {
       <div class="sur-inner">
         <p class="sur-lead">
           Site en zone PPR inondation. Consulte le zonage réglementaire
-          (<a href="${link}" target="_blank" rel="noopener">consulter le zonage PPRi ↗</a>),
+          (<a href="${link}" target="_blank" rel="noopener">consulter le PPRi du site ↗</a>),
           relève la <b>cote de référence</b> la plus proche, puis saisis-la ci-dessous.
         </p>
         <div class="sur-row">
