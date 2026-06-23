@@ -24,6 +24,29 @@ export interface RisksRaw {
   icpeCount: number; // installations classées dans 500 m
   icpeSeveso: boolean; // au moins un établissement SEVESO dans 500 m
   icpeNames: string[]; // raisons sociales des ICPE
+  remonteeNappeStatut: string | null; // statut remontée de nappe à l'adresse (rapport Géorisques)
+}
+
+// Récupère le statut "remontée de nappe" depuis le rapport risques par adresse.
+// Source distincte des autres indicateurs (endpoint agrégé) → isolée et non bloquante.
+async function fetchRemonteeNappe(pt: string): Promise<string | null> {
+  try {
+    const r = await getJson(`${BASE}/resultats_rapport_risque?latlon=${pt}&rayon=10`);
+    const find = (o: any): any => {
+      if (o && typeof o === 'object') {
+        if ('remonteeNappe' in o) return o.remonteeNappe;
+        for (const v of Object.values(o)) {
+          const f = find(v);
+          if (f) return f;
+        }
+      }
+      return null;
+    };
+    const rn = find(r);
+    return (rn?.libelleStatutAdresse ?? rn?.libelleStatutCommune) || null;
+  } catch {
+    return null; // statut absent → critère neutre, le reste du diagnostic tient
+  }
 }
 
 const num = (v: unknown): number | null => {
@@ -39,7 +62,7 @@ export async function fetchRisks(
   const pt = ll(lat, lon);
 
   // Endpoints géo (rayon) et commune (code_insee) lancés en parallèle
-  const [seisme, argiles, radon, mvt, cavites, azi, catnat, casias, icpe] = await Promise.all([
+  const [seisme, argiles, radon, mvt, cavites, azi, catnat, casias, icpe, remonteeNappeStatut] = await Promise.all([
     getJson(`${BASE}/zonage_sismique?latlon=${pt}`),
     getJson(`${BASE}/rga?latlon=${pt}`),
     getJson(`${BASE}/radon?code_insee=${citycode}`),
@@ -49,6 +72,7 @@ export async function fetchRisks(
     getJson(`${BASE}/gaspar/catnat?code_insee=${citycode}&page_size=50`),
     getJson(`${BASE}/ssp/casias?latlon=${pt}&rayon=500&page_size=20`),
     getJson(`${BASE}/installations_classees?latlon=${pt}&rayon=500&page_size=20`),
+    fetchRemonteeNappe(pt),
   ]);
 
   const icpeData: any[] = icpe.data ?? [];
@@ -76,5 +100,6 @@ export async function fetchRisks(
     icpeCount: num(icpe?.results) ?? icpeData.length,
     icpeSeveso: icpeData.some((d) => isSeveso(d.statutSeveso)),
     icpeNames: icpeData.map((d) => d.raisonSociale as string).filter(Boolean),
+    remonteeNappeStatut,
   };
 }

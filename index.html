@@ -3,115 +3,142 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pré-diagnostic de faisabilité IRVE</title>
-  <meta name="description" content="Pré-diagnostic de faisabilité pour un site de recharge IRVE : réseau Enedis, risques naturels et technologiques, urbanisme. Filtre amont avant l'étude détaillée." />
-  <meta name="author" content="Outil interne — pré-faisabilité IRVE" />
-  <meta name="theme-color" content="#13201b" />
+  <title>SAFI — Système d'Aide à la Faisabilité IRVE</title>
+  <meta name="description" content="SAFI — pré-diagnostic de faisabilité d'un site de recharge IRVE à partir d'une adresse. Filtre amont, avant l'étude détaillée." />
+  <meta name="author" content="SAFI" />
+  <meta name="theme-color" content="#14241c" />
   <meta name="color-scheme" content="light" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2313201b'/%3E%3Cpath d='M17.5 5 9 18h5l-1.5 9 9-13h-5z' fill='%231f8a4c'/%3E%3C/svg%3E" />
-  <!-- Aperçu de lien (partage interne) -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23172230'/%3E%3Cpath d='M37 13 24 37h7l-3 14 16-23h-8z' fill='%2327c06a'/%3E%3C/svg%3E" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Pré-diagnostic de faisabilité IRVE" />
-  <meta property="og:description" content="D'une adresse à une synthèse de points de vigilance : réseau, risques, urbanisme. Avant l'étude détaillée." />
+  <meta property="og:title" content="SAFI — Système d'Aide à la Faisabilité IRVE" />
+  <meta property="og:description" content="D'une adresse à une synthèse des points de vigilance d'un site IRVE. Avant l'étude détaillée." />
   <meta property="og:locale" content="fr_FR" />
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 32 32" width="18" height="18"><path d="M17.5 4 8 19h6l-2 9 10-15h-6z" fill="currentColor"/></svg>
-        </span>
-        <span class="brand-name">Repère</span>
-        <span class="brand-tag">pré-diagnostic IRVE</span>
-        <button id="demo-btn" class="demo-btn" type="button">🎬 Mode démo</button>
-      </div>
-      <div id="demo-picker" class="demo-picker hidden"></div>
-      <h1>D'une adresse à une synthèse de faisabilité</h1>
-      <p class="sub">Saisis une adresse ou des coordonnées : l'outil interroge les bases publiques (réseau Enedis, risques Géorisques, urbanisme IGN) et remonte les points de vigilance — un filtre amont, avant l'étude détaillée.</p>
-    </header>
 
-    <div class="search">
-      <div class="field">
-        <input id="addr" type="text" placeholder="Adresse ou coordonnées GPS (48.8566, 2.3522)…" autocomplete="off" />
-        <div id="ac" class="ac hidden"></div>
-      </div>
-      <div class="btn-row">
-        <button id="go">Analyser</button>
-        <button id="pdf-btn" class="hidden">↓ PDF</button>
-      </div>
-    </div>
-
-    <div class="controls">
-      <label>Rayon de recherche
-        <select id="radius" style="font-family:var(--mono);padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--card)">
-          <option value="1000">1 km</option>
-          <option value="2000" selected>2 km</option>
-          <option value="5000">5 km</option>
-        </select>
-      </label>
-    </div>
-
-    <div class="status" id="status"></div>
-
-    <div class="empty" id="empty">
-      <p class="empty-lead">Saisis un site pour lancer le pré-diagnostic.</p>
-      <div class="examples">
-        <span>Exemples</span>
-        <button class="ex" data-q="Place du Capitole 31000 Toulouse">Adresse</button>
-        <button class="ex" data-q="Place Bellecour 69002 Lyon">Centre-ville</button>
-        <button class="ex" data-q="48.8566, 2.3522">Coordonnées GPS</button>
-      </div>
-    </div>
-
-    <div class="hidden" id="results">
-      <div class="diag" id="diagnostic"></div>
-
-      <div class="grid">
-        <div class="card">
-          <h2>Localisation</h2>
-          <div id="map"></div>
+  <!-- ====================== ACCUEIL ====================== -->
+  <section id="home" class="home">
+    <div class="wrap">
+      <header class="home-head">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64" width="30" height="30" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M45 18c0-6.5-7-9-14-9-8 0-13 5-13 12 0 6.2 5 9 13 10" stroke="#1d2b3a" stroke-width="7" stroke-linecap="round"/>
+              <path d="M19 46c0 6.5 7 9 14 9 8 0 13-5 13-12 0-6.2-5-9-13-10" stroke="#1d2b3a" stroke-width="7" stroke-linecap="round"/>
+              <path d="M37 13 24 37h7l-3 14 16-23h-8z" fill="#27c06a"/>
+            </svg>
+          </span>
+          <div class="brand-text">
+            <span class="brand-name">SAFI</span>
+            <span class="brand-tag">Système d'Aide à la Faisabilité IRVE</span>
+          </div>
+          <button id="demo-btn" class="ghost-btn" type="button">Mode démo</button>
         </div>
-        <div class="card">
-          <h2>Synthèse réseau</h2>
-          <div class="syn" id="syn"></div>
+        <div id="demo-picker" class="demo-picker hidden"></div>
+
+        <div class="pill"><span class="pill-dot"></span>Filtre amont · bases publiques françaises</div>
+        <h1>Pré-diagnostic de faisabilité d'un site IRVE.</h1>
+        <p class="sub">Saisis une adresse ou des coordonnées GPS. L'outil interroge les bases publiques et synthétise les points de vigilance à intégrer à ton étude. <b>L'outil signale ; il ne décide pas.</b></p>
+      </header>
+
+      <div class="search">
+        <div class="field">
+          <input id="addr" type="text" placeholder="Ex. 22 rue d'Aubervilliers, 75019 Paris — ou 48.8895, 2.3712" autocomplete="off" />
+          <div id="ac" class="ac hidden"></div>
         </div>
+        <button id="go">Lancer l'analyse</button>
       </div>
 
-      <details class="card postes-card">
-        <summary>Postes HTA/BT à proximité</summary>
-        <ul class="plist" id="plist"></ul>
+      <div class="home-row">
+        <div class="examples">
+          <span>Exemples</span>
+          <button class="ex" data-q="Place du Capitole 31000 Toulouse">Toulouse</button>
+          <button class="ex" data-q="Place Bellecour 69002 Lyon">Lyon</button>
+          <button class="ex" data-q="48.8566, 2.3522">Coordonnées GPS</button>
+        </div>
+        <label class="radius-ctl">Rayon
+          <select id="radius">
+            <option value="1000">1 km</option>
+            <option value="2000" selected>2 km</option>
+            <option value="5000">5 km</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="status" id="status"></div>
+
+      <details class="pf-card">
+        <summary>Mode portefeuille — analyser plusieurs sites</summary>
+        <div class="pf-body">
+          <p class="pf-help">Un site par ligne, au format <code>référence;adresse</code> (référence optionnelle). L'adresse accepte aussi des coordonnées GPS.</p>
+          <textarea id="pf-input" class="pf-input" rows="6" placeholder="Site A;12 rue de la Paix 75002 Paris&#10;Site B;45.6797, -0.3016&#10;3 rue des fleurs 69001 Lyon"></textarea>
+          <input type="file" id="pf-file" accept=".csv,text/csv" hidden />
+          <div class="pf-actions">
+            <button id="pf-run">Analyser le portefeuille</button>
+            <button id="pf-import" class="pf-sec">Importer un CSV</button>
+            <button id="pf-template" class="pf-sec">↓ Modèle CSV</button>
+            <button id="pf-export" class="pf-sec hidden">Exporter les résultats</button>
+          </div>
+          <div class="pf-progress" id="pf-progress"></div>
+          <div id="pf-results"></div>
+        </div>
       </details>
-    </div>
 
-    <details class="card pf-card">
-      <summary>📊 Mode portefeuille — analyser plusieurs sites</summary>
-      <div class="pf-body">
-        <p class="pf-help">Un site par ligne, au format <code>référence;adresse</code> (la référence est optionnelle). L'adresse accepte aussi des coordonnées GPS.</p>
-        <textarea id="pf-input" class="pf-input" rows="6" placeholder="Site A;12 rue de la Paix 75002 Paris&#10;Site B;45.6797, -0.3016&#10;3 rue des fleurs 69001 Lyon"></textarea>
-        <input type="file" id="pf-file" accept=".csv,text/csv" hidden />
-        <div class="pf-actions">
-          <button id="pf-run">Analyser le portefeuille</button>
-          <button id="pf-import" class="pf-sec">Importer un CSV</button>
-          <button id="pf-template" class="pf-sec">↓ Modèle CSV</button>
-          <button id="pf-export" class="pf-sec hidden">💾 Exporter les résultats</button>
+      <footer class="site-footer">
+        <div class="foot-meta">SAFI · pré-diagnostic IRVE · bases open data publiques · à titre indicatif</div>
+      </footer>
+    </div>
+  </section>
+
+  <!-- ====================== RÉSULTAT ====================== -->
+  <section id="results" class="hidden">
+    <nav class="topbar">
+      <div class="topbar-in">
+        <button type="button" id="brand-home" class="brand brand-btn" title="Retour à l'accueil">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M45 18c0-6.5-7-9-14-9-8 0-13 5-13 12 0 6.2 5 9 13 10" stroke="#1d2b3a" stroke-width="7" stroke-linecap="round"/>
+              <path d="M19 46c0 6.5 7 9 14 9 8 0 13-5 13-12 0-6.2-5-9-13-10" stroke="#1d2b3a" stroke-width="7" stroke-linecap="round"/>
+              <path d="M37 13 24 37h7l-3 14 16-23h-8z" fill="#27c06a"/>
+            </svg>
+          </span>
+          <span class="brand-name">SAFI</span>
+        </button>
+        <div class="topbar-actions">
+          <form id="top-search" class="top-search">
+            <input id="addr-top" type="text" placeholder="Nouvelle adresse ou coordonnées…" autocomplete="off" />
+            <button type="submit" class="solid-btn">Analyser</button>
+          </form>
+          <button type="button" id="pdf-btn-top" class="ghost-btn">Exporter PDF</button>
         </div>
-        <div class="pf-progress" id="pf-progress"></div>
-        <div id="pf-results"></div>
       </div>
-    </details>
+    </nav>
 
-    <div class="disclaimer">
-      <b>Avertissement.</b> Les données proviennent d'open data publics (Enedis, Géorisques, IGN/Géoportail de l'Urbanisme, BAN), fournis à titre indicatif sans garantie de fiabilité ni d'exhaustivité. Ce pré-diagnostic <b>ne remplace pas</b> une étude de faisabilité, une étude de raccordement Enedis ni une visite de site. Il sert à dégrossir et à prioriser, pas à décider.
-    </div>
+    <main class="result-main">
+      <section id="synth"></section>
 
-    <footer class="site-footer">
-      <div class="foot-sources">
-        <span>Sources</span> BAN · Enedis Open Data · Géorisques · API Carto IGN / GPU
+      <div class="result-grid">
+        <div class="themes-col">
+          <div id="diagnostic"></div>
+          <div id="surelevation" class="hidden"></div>
+        </div>
+
+        <aside class="side-col">
+          <div class="map-card">
+            <div class="map-card-head">Vue cartographique</div>
+            <div id="map"></div>
+            <div id="map-meta" class="map-meta"></div>
+          </div>
+
+          <div id="postes-block" class="postes-block"></div>
+        </aside>
       </div>
-      <div class="foot-meta">Outil interne · pré-diagnostic IRVE · données open data</div>
-    </footer>
-  </div>
+
+      <div class="disclaimer">
+        <b>Avertissement.</b> Données issues de bases open data publiques françaises, à titre indicatif, sans garantie de fiabilité ni d'exhaustivité. Ce pré-diagnostic <b>ne remplace pas</b> une étude de faisabilité, une étude de raccordement ni une visite de site. Il sert à dégrossir et prioriser, pas à décider.
+      </div>
+    </main>
+  </section>
 
   <script type="module" src="/src/main.ts"></script>
 </body>

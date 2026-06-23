@@ -179,6 +179,22 @@ export function riskCriteria(r: RisksRaw): Criterion[] {
     consequences: r.icpeSeveso ? ['feasibility'] : [],
   });
 
+  // Remontée de nappe (rapport Géorisques, statut à l'adresse) : impact fond de fouille /
+  // cuvelage des massifs enterrés. Existant → watch ; non connu / absent → mention neutre.
+  const nappe = r.remonteeNappeStatut;
+  if (nappe) {
+    const existant = /existant/i.test(nappe);
+    out.push({
+      id: 'nappe',
+      label: 'Remontée de nappe',
+      level: existant ? 'watch' : 'ok',
+      detail: existant
+        ? 'Site en zone de remontée de nappe — fond de fouille / cuvelage des massifs à étudier (étude hydrogéologique en phase aval).'
+        : `Statut « ${nappe} » à l'adresse.`,
+      consequences: existant ? ['financial'] : [],
+    });
+  }
+
   return out;
 }
 

@@ -27,3 +27,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Note business interne (hors dépôt app)
+NOTE-COO.md

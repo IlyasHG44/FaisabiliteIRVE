@@ -12,6 +12,28 @@ const ORTHO_URL =
   '&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&TILEMATRIXSET=PM' +
   '&FORMAT=image/jpeg&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}';
 
+// Parcellaire cadastral (IGN Géoplateforme, tuiles PNG transparentes) — contours seuls.
+const CADASTRE_URL =
+  'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0' +
+  '&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&STYLE=normal&TILEMATRIXSET=PM' +
+  '&FORMAT=image/png&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}';
+
+// Zonage réglementaire PPR inondation (BRGM/Géorisques, WMS) — le "dégradé" rouge/bleu.
+const GEORISQUES_WMS = 'https://mapsref.brgm.fr/wxs/georisques/risques';
+
+function cadastreLayer(): L.TileLayer {
+  return L.tileLayer(CADASTRE_URL, {
+    maxZoom: 19, opacity: 0.7, attribution: '© IGN — Parcellaire Express', crossOrigin: true,
+  });
+}
+
+function inondationLayer(): L.TileLayer.WMS {
+  return L.tileLayer.wms(GEORISQUES_WMS, {
+    layers: 'PPRN_ZONE_INOND', format: 'image/png', transparent: true, version: '1.3.0',
+    opacity: 0.55, attribution: '© Géorisques / BRGM',
+  });
+}
+
 function initMap(): L.Map {
   const m = L.map('map', { scrollWheelZoom: false });
 
@@ -23,7 +45,11 @@ function initMap(): L.Map {
   });
 
   satellite.addTo(m); // satellite par défaut (effet "vue du ciel")
-  L.control.layers({ 'Satellite (IGN)': satellite, 'Plan': plan }, undefined, { collapsed: true }).addTo(m);
+  L.control.layers(
+    { 'Satellite (IGN)': satellite, 'Plan': plan },
+    { 'Parcelles cadastrales': cadastreLayer(), 'Zonage inondation (PPRi)': inondationLayer() },
+    { collapsed: true },
+  ).addTo(m);
   return m;
 }
 
@@ -37,10 +63,13 @@ export function renderMap(site: Site, postes: Poste[]): void {
     radius: 9, color: '#ffffff', fillColor: '#1f8a4c', fillOpacity: 1, weight: 3,
   }).bindPopup(`<b>Site candidat</b><br>${site.label}`).addTo(markerLayer);
 
-  postes.slice(0, 12).forEach(p => {
+  postes.slice(0, 8).forEach((p, i) => {
     L.circleMarker([p.lat, p.lon], {
-      radius: 6, color: '#ffffff', fillColor: '#e7b53c', fillOpacity: 0.95, weight: 2,
-    }).bindPopup(`Poste HTA/BT<br>${Math.round(p.dist)} m`).addTo(markerLayer!);
+      radius: 7, color: '#ffffff', fillColor: '#e7b53c', fillOpacity: 0.95, weight: 2,
+    })
+      .bindTooltip(`P${i + 1}`, { permanent: true, direction: 'top', offset: [0, -6], className: 'poste-tip' })
+      .bindPopup(`Poste P${i + 1} · ${Math.round(p.dist)} m`)
+      .addTo(markerLayer!);
   });
 
   // Vue déterministe : on recalcule la taille du conteneur AVANT de fixer la vue,
