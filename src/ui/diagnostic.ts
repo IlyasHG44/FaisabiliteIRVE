@@ -108,7 +108,7 @@ export function renderDiagnostic(
       <p class="synth-summary">${summary}</p>
     </div>
     <div class="count-grid">${countCells}</div>
-    <div class="synth-note">Filtre amont destiné à dégrossir et prioriser un portefeuille de sites. Ne se substitue pas à une étude détaillée et ne formule pas de GO/NO-GO.</div>`;
+    <div class="synth-note"><b>Avertissement.</b> Données issues de bases open data publiques françaises, à titre indicatif, sans garantie de fiabilité ni d'exhaustivité. Ce pré-diagnostic ne remplace pas une étude de faisabilité, une étude de raccordement ni une visite de site : il sert à dégrossir et prioriser, pas à décider. Édité par HG&nbsp;Capital.</div>`;
 
   const byId = new Map(criteria.map(c => [c.id, c]));
   themesEl.innerHTML = GROUPS

@@ -39,6 +39,18 @@ function showHome(): void {
 // Export PDF = impression navigateur (le PDF reprend exactement la page, via le CSS print).
 function exportPdf(): void { window.print(); }
 
+// À l'impression, déplier tous les blocs repliés (groupes + surélévation) puis les
+// restaurer après — garantit que le PDF contient tout, dépliés ou non.
+let collapsedForPrint: HTMLDetailsElement[] = [];
+window.addEventListener('beforeprint', () => {
+  collapsedForPrint = Array.from(document.querySelectorAll<HTMLDetailsElement>('details.theme:not([open])'));
+  collapsedForPrint.forEach(d => { d.open = true; });
+});
+window.addEventListener('afterprint', () => {
+  collapsedForPrint.forEach(d => { d.open = false; });
+  collapsedForPrint = [];
+});
+
 // Bloc latéral : postes électriques à proximité, numérotés comme sur la carte.
 function renderPostes(el: HTMLElement, postes: Poste[]): void {
   if (!postes.length) {
